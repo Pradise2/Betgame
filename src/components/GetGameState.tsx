@@ -5,12 +5,11 @@ import {
   Trophy,
   Coins,
   XCircle,
-  ArrowRight,
-  CircleDollarSign,
+  
 } from 'lucide-react';
 
 const GetGameState = () => {
-  const [gameId, setGameId] = useState<number>(1); // Example gameId
+  const [gameId] = useState<number>(1); // Example gameId
   const [gameStates, setGameStates] = useState<any[]>([]); // Array to hold multiple game states
   const [playerAddress, setPlayerAddress] = useState<string>(''); // The address of the player (this should be connected wallet)
   const [hasWithdrawnState, setHasWithdrawnState] = useState<boolean | null>(null);
@@ -42,20 +41,6 @@ const GetGameState = () => {
     fetchGameStates();
   }, []);
 
-  const handleGetGameState = async (gameId: number) => {
-    try {
-      console.log(`Resolving game ${gameId}...`);
-      const state = await getGameState(gameId); // Call resolveGame function
-      console.log(`Successfully resolved game ${gameId}`, state);
-    } catch (err) {
-      console.error('Error resolving game:', err);
-      if (err instanceof Error) {
-        setError(`Failed to resolve game: ${err.message}`);
-      } else {
-        setError('Failed to resolve game: An unknown error occurred.');
-      }
-    }
-  };
 
   const checkWithdrawnStatus = async () => {
     if (playerAddress) {
@@ -75,9 +60,6 @@ const GetGameState = () => {
     setPlayerAddress(event.target.value);
   };
 
-  const handleGameIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setGameId(Number(event.target.value));
-  };
 
   return (
     <div className="p-6">
