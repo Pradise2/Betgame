@@ -1,7 +1,3 @@
-// src/FlipGame.ts
-
-// src/FlipGame.ts
-
 import { ethers } from 'ethers';
 import { ABI, ADDRESS } from '../contracts/contract';
 
@@ -23,47 +19,21 @@ export const publicContract = new ethers.Contract(ADDRESS, ABI, publicProvider);
 // Function to set up signer and contract for wallet interaction
 async function setupContractWithSigner() {
   try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const contract = new ethers.Contract(ADDRESS, ABI, signer);
-    return { signer, contract };
+    if (window.ethereum) {
+      // Type assertion to tell TypeScript that window.ethereum is Eip1193Provider
+      const provider = new ethers.BrowserProvider(window.ethereum as unknown as ethers.Eip1193Provider);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(ADDRESS, ABI, signer);
+      return { signer, contract };
+    } else {
+      throw new Error('Ethereum provider is not available. Please install a wallet like MetaMask.');
+    }
   } catch (error) {
     console.error('Error setting up contract with signer:', error);
     throw error;
   }
 }
 
-// Get the state of a specific game
-export async function getGameState(gameId: number) {
-  try {
-    const contract = publicContract; // Using the public contract
-    const gameState = await contract.getGameState(gameId);
-    return {
-      player1: gameState[0],
-      player2: gameState[1],
-      betAmount: ethers.formatUnits(gameState[2], 18), // assuming 18 decimals
-      tokenAddress: gameState[3],
-      state: gameState[4].toString(),  // Enum value as a string
-      winner: gameState[5],
-      winAmount: ethers.formatUnits(gameState[6], 18), // assuming 18 decimals
-    };
-  } catch (error) {
-    console.error('Error fetching game state:', error);
-    throw error;
-  }
-}
-
-// Check if a player has withdrawn their reward for a specific game
-export async function hasPlayerWithdrawn(gameId: number, player: string) {
-  try {
-    const contract = publicContract; // Using the public contract
-    const hasWithdrawn = await contract.hasPlayerWithdrawn(gameId, player);
-    return hasWithdrawn;
-  } catch (error) {
-    console.error('Error checking if player has withdrawn:', error);
-    throw error;
-  }
-}
 
 
 // Define the GameDetails interface
@@ -78,7 +48,6 @@ interface GameDetails {
   player2Balance: string;
   player1: string;
 }
-
 
 // Function to handle contract errors with additional info
 interface ContractError extends Error {
@@ -523,3 +492,36 @@ export const getGameIdCounter = async () => {
     return 0; // Return 0 or appropriate fallback value
   }
 };
+
+
+// Get the state of a specific game
+export async function getGameState(gameId: number) {
+  try {
+    const contract = publicContract; // Using the public contract
+    const gameState = await contract.getGameState(gameId);
+    return {
+      player1: gameState[0],
+      player2: gameState[1],
+      betAmount: ethers.formatUnits(gameState[2], 18), // assuming 18 decimals
+      tokenAddress: gameState[3],
+      state: gameState[4].toString(),  // Enum value as a string
+      winner: gameState[5],
+      winAmount: ethers.formatUnits(gameState[6], 18), // assuming 18 decimals
+    };
+  } catch (error) {
+    console.error('Error fetching game state:', error);
+    throw error;
+  }
+}
+
+// Check if a player has withdrawn their reward for a specific game
+export async function hasPlayerWithdrawn(gameId: number, player: string) {
+  try {
+    const contract = publicContract; // Using the public contract
+    const hasWithdrawn = await contract.hasPlayerWithdrawn(gameId, player);
+    return hasWithdrawn;
+  } catch (error) {
+    console.error('Error checking if player has withdrawn:', error);
+    throw error;
+  }
+}
