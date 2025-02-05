@@ -28,14 +28,12 @@ export function App() {
 
   return (
     <div className=" min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
-    
       <Navbar />
       <CreateGame/> 
        <Available/>
       <div className="container mx-auto px-4 py-8">
       <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-        <QueryClientProvider client={queryClient}>   
-          
+        <QueryClientProvider client={queryClient}>  
             <GetGameState/>
         </QueryClientProvider>
       </WagmiProvider>
