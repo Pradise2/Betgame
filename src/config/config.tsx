@@ -3,7 +3,7 @@ import { base } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 
 // Get projectId from https://cloud.reown.com
-export const projectId = import.meta.env.VITE_PROJECT_ID
+export const projectId = 'afaae3c4a2914dcfce38cc019868dda5'
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
