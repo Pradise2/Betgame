@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { ABI, ADDRESS } from '../contracts/contract';
 
+
 export const SUPPORTED_TOKENS = {
   STABLEAI: '0x07F41412697D14981e770b6E335051b1231A2bA8',
   DIG: '0x208561379990f106E6cD59dDc14dFB1F290016aF',
@@ -47,6 +48,7 @@ interface GameDetails {
   tokenSymbol: string;
   player2Balance: string;
   player1: string;
+  gameId: string;
 }
 
 // Function to handle contract errors with additional info
@@ -69,34 +71,35 @@ function handleContractError(error: ContractError) {
   }
 }
 
-// Function to create a new game
 export const createGame = async (
-  tokenAddress: string, 
-  betAmount: string, 
-  player1Choice: boolean, // Add player1Choice parameter
-  timeoutDuration: string  // Add timeoutDuration parameter (in seconds)
-  ) => {
+  tokenAddress: string,
+  betAmount: string,
+  player1Choice: boolean, // Player 1's choice
+  timeoutDuration: string // Timeout duration (in seconds)
+): Promise<number> => { // Return a Promise<number> for the gameId
   try {
     const { signer, contract } = await setupContractWithSigner();
 
     console.log('Creating game with amount:', betAmount, 'and token address:', tokenAddress);
 
-    // Create token contract instance
-    const tokenContract = new ethers.Contract(tokenAddress, [
+    // Update token contract ABI for ERC-20 tokens
+    const tokenABI = [
       'function approve(address spender, uint256 amount) public returns (bool)',
       'function balanceOf(address owner) public view returns (uint256)',
-    ], signer);
+    ];
 
+    const tokenContract = new ethers.Contract(tokenAddress, tokenABI, signer);
     console.log('Token contract:', tokenContract);
+
     // Convert betAmount to the correct token decimals (18 decimals)
     const betAmountInWei = ethers.parseUnits(betAmount, 18);
-console.log('betAmountInWei:', betAmountInWei.toString());
+    console.log('betAmountInWei:', betAmountInWei.toString());
+
     // Step 1: Check Player 1's balance to make sure they have enough tokens
     const balance = await tokenContract.balanceOf(await signer.getAddress());
-    console.log('Player balance:', balance.toString());  // Log the balance to check if it returns a BigInt
-console.log('balance:', balance.toString());
+    console.log('Player balance:', balance.toString());
 
-    if (balance < (betAmountInWei)) {
+    if (balance < betAmountInWei) {
       const errorMessage = 'Not enough tokens to create game';
       console.error(errorMessage);
       throw new Error(errorMessage);
@@ -107,16 +110,32 @@ console.log('balance:', balance.toString());
     await approveTx.wait();
     console.log('Token approved successfully.');
 
-    // Step 3: Call createGame to create the game
+    // Step 3: Create the game
     const tx = await contract.createGame(betAmountInWei, tokenAddress, player1Choice, timeoutDuration);
-    await tx.wait();
-    console.log('Game created successfully:', tx);
+    const receipt = await tx.wait();  // Ensure the transaction is mined
+    console.log('Transaction receipt:', receipt);
+    
+    
+
+    // Step 4: Listen for the GameCreated event after the transaction is mined
+    return new Promise((resolve, reject) => {
+      // Listen for the GameCreated event and resolve with the gameId
+      contract.once('GameCreated', (gameId: number) => {
+        console.log('GameCreated event received:', gameId);
+        resolve(gameId); // Resolve the promise with the gameId
+      });
+
+      // Timeout in case the event doesn't fire
+      setTimeout(() => reject(new Error('Game creation timeout')), 10000); // 10 second timeout
+    });
 
   } catch (error) {
     console.error('Error creating game:', error);
     handleContractError(error as ContractError);
+    throw error; // Re-throw the error to handle it in the calling function
   }
 };
+
 
 // Join an existing game
 export const joinGame = async (gameId: number) => {
@@ -411,7 +430,7 @@ export const getGameDetails = async (gameId: number): Promise<GameDetails> => {
       return 'Unknown Symbol';
     });
 
-         // Fetch the balance for player1 (you can adjust to check either player1 or player2)
+    // Fetch the balance for player1 (you can adjust to check either player1 or player2)
     const player2Balance = await tokenContract.balanceOf(gameDetails.player2);
     const player2BalanceInEther = ethers.formatUnits(player2Balance, 18); // Convert balance to a human-readable format
     console.log('Player 2 Token Balance:', player2BalanceInEther);

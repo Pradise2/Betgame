@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useReducer, useCallback } from 'react';
-import {
-  useAppKitAccount
-} from '@reown/appkit/react'
+// Cg.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAppKitAccount } from '@reown/appkit/react';
 import { createGame, SUPPORTED_TOKENS } from '../utils/contractFunction';
 import { Coins, Loader2, Plus, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { ethers } from 'ethers';
+import { useGameStore } from './store';
 
 interface CreateGameState {
   player1Choice: boolean;
@@ -18,17 +18,13 @@ interface CreateGameState {
   tokenSymbol: string;
 }
 
-interface CreateGameProps {
-  onGameCreate: (newGame: any) => void; // Replace `any` with a proper type for `newGame`
-}
-
-const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
+const Cg: React.FC = () => {
   const { address, isConnected } = useAppKitAccount();
-  
-  // Initial state for the game creation form
-  const initialState: CreateGameState = {
+  const { addGame } = useGameStore.getState();
+
+  const [state, setState] = useState<CreateGameState>({
     player1Choice: false,
-    timeoutDuration: '3600', // Default to 1 hour
+    timeoutDuration: '3600', // Default 1 hour in seconds
     betAmount: '',
     tokenAddress: SUPPORTED_TOKENS.STABLEAI,
     loading: false,
@@ -36,12 +32,8 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
     success: null,
     tokenBalance: '0',
     tokenSymbol: 'STABLEAI',
-  };
+  });
 
-  // Reducer to manage the state
-  const [state, setState] = useState<CreateGameState>(initialState);
-
-  // Fetch token balance and symbol using ethers
   const fetchTokenBalance = useCallback(async () => {
     if (!address || !state.tokenAddress || !isConnected) return;
 
@@ -51,36 +43,34 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
         state.tokenAddress,
         [
           'function balanceOf(address owner) view returns (uint256)',
-          'function symbol() view returns (string)'
+          'function symbol() view returns (string)',
         ],
         provider
       );
 
       const [balance, symbol] = await Promise.all([
         tokenContract.balanceOf(address),
-        tokenContract.symbol()
+        tokenContract.symbol(),
       ]);
 
-      setState(prevState => ({
+      setState((prevState) => ({
         ...prevState,
         tokenBalance: ethers.formatUnits(balance, 18),
-        tokenSymbol: symbol
+        tokenSymbol: symbol,
       }));
     } catch (error) {
       console.error('Error fetching token details:', error);
-      setState(prevState => ({
+      setState((prevState) => ({
         ...prevState,
-        error: 'Failed to fetch token details'
+        error: 'Failed to fetch token details',
       }));
     }
   }, [address, state.tokenAddress, isConnected]);
 
-  // Fetch balance on initial render or when address/token changes
   useEffect(() => {
     fetchTokenBalance();
   }, [fetchTokenBalance]);
 
-  // Validate input before creating game
   const validateInput = (): string | null => {
     if (!isConnected) return 'Please connect your wallet';
     if (!state.betAmount || parseFloat(state.betAmount) <= 0) return 'Bet amount must be positive';
@@ -88,63 +78,52 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
       return `Insufficient ${state.tokenSymbol} balance`;
     }
     if (!state.timeoutDuration || parseInt(state.timeoutDuration) < 300) return 'Timeout must be at least 5 minutes';
-    if (!ethers.isAddress(state.tokenAddress)) return 'Invalid token address';
     return null;
   };
 
-  // Create game action
   const handleCreateGame = async () => {
     const validationError = validateInput();
-
     if (validationError) {
-      setState(prev => ({ ...prev, error: validationError }));
-
-      // Clear the error message after 1 second (1000 milliseconds)
-      setTimeout(() => {
-        setState(prev => ({ ...prev, error: null }));
-      }, 1000);
-
+      setState((prev) => ({ ...prev, error: validationError }));
+      setTimeout(() => setState((prev) => ({ ...prev, error: null })), 1000);
       return;
     }
-
-    setState(prev => ({ ...prev, error: null, success: null, loading: true }));
-
+  
+    setState((prev) => ({ ...prev, error: null, success: null, loading: true }));
+  
     try {
-      await createGame(
+      // Create the game and get the gameId
+      const gameId = await createGame(
         state.tokenAddress,
         state.betAmount,
         state.player1Choice,
         state.timeoutDuration
       );
-
-      setState(prev => ({
+      console.log('Game Created:', gameId);
+  
+      // Add the new game to the Zustand store
+      await addGame(gameId);
+  
+      setState((prev) => ({
         ...prev,
         success: 'Game created successfully!',
         loading: false,
-        betAmount: '' // Reset bet amount after successful creation
+        betAmount: '',
       }));
-
-      // Clear the success message after 5 seconds (5000 milliseconds)
-      setTimeout(() => {
-        setState(prev => ({ ...prev, success: null }));
-      }, 5000);
-
-      // Refresh token balance
+  
+      setTimeout(() => setState((prev) => ({ ...prev, success: null })), 5000);
       fetchTokenBalance();
     } catch (error: any) {
-      setState(prev => ({
+      console.error('Error creating game:', error);
+      setState((prev) => ({
         ...prev,
         error: error.message || 'Failed to create game',
-        loading: false
+        loading: false,
       }));
-
-      // Clear the error message after 1 second (1000 milliseconds)
-      setTimeout(() => {
-        setState(prev => ({ ...prev, error: null }));
-      }, 1000);
+      setTimeout(() => setState((prev) => ({ ...prev, error: null })), 1000);
     }
   };
-
+  
   return (
     <div className="bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -169,15 +148,21 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
             <label htmlFor="betAmount" className="block text-sm font-medium text-gray-700 mb-1">
               Bet Amount
             </label>
-            <input
-              id="betAmount"
-              type="number"
-              step="0.000001"
-              min="0"
-              value={state.betAmount}
-              onChange={(e) => setState(prev => ({ ...prev, betAmount: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
+            <div className="text-gray-700 relative">
+              <input
+                id="betAmount"
+                type="number"
+                step="0.000001"
+                min="0"
+                placeholder="0.00"
+                value={state.betAmount}
+                onChange={(e) => setState(prev => ({ ...prev, betAmount: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                {state.tokenSymbol}
+              </span>
+            </div>
           </div>
 
           {/* Token Selection */}
@@ -218,7 +203,8 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
 
           {/* Player Choice */}
           <div className="flex items-center gap-2">
-            <span className="ml-3 text-sm font-medium text-gray-700">Tails</span>
+             <span className="ml-3 text-sm font-medium text-gray-700">Tails</span>
+            
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -278,8 +264,11 @@ const CreateGame: React.FC<CreateGameProps> = ({ onGameCreate }) => {
           </div>
         </div>
       </div>
+      <div>
+       
+      </div>
     </div>
   );
 };
 
-export default CreateGame;
+export default Cg

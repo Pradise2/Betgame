@@ -37,13 +37,13 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "gameId",
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "player1",
 				"type": "address"
@@ -55,7 +55,7 @@
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "tokenAddress",
 				"type": "address"
@@ -74,19 +74,19 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "gameId",
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "player1",
 				"type": "address"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "player2",
 				"type": "address"
@@ -111,13 +111,13 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "gameId",
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "winner",
 				"type": "address"
@@ -155,13 +155,13 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "gameId",
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "player",
 				"type": "address"
@@ -180,7 +180,7 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "tokenAddress",
 				"type": "address"
@@ -199,7 +199,7 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "tokenAddress",
 				"type": "address"
@@ -235,19 +235,6 @@
 			}
 		],
 		"name": "cancelGame",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "gameId",
-				"type": "uint256"
-			}
-		],
-		"name": "claimReward",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -356,17 +343,6 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "initialOwner",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "tokenAddress",
 				"type": "address"
 			},
@@ -380,6 +356,17 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "initialOwner",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
 	},
 	{
 		"inputs": [],
@@ -466,7 +453,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "getGameState",
+		"name": "getFullGameDetails",
 		"outputs": [
 			{
 				"internalType": "address",
@@ -494,6 +481,21 @@
 				"type": "uint8"
 			},
 			{
+				"internalType": "bool",
+				"name": "player1Choice",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "createdAt",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timeoutDuration",
+				"type": "uint256"
+			},
+			{
 				"internalType": "address",
 				"name": "winner",
 				"type": "address"
@@ -515,30 +517,6 @@
 				"internalType": "address[]",
 				"name": "",
 				"type": "address[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "gameId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "player",
-				"type": "address"
-			}
-		],
-		"name": "hasPlayerWithdrawn",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -630,7 +608,7 @@
 ];
 
 // src/contracts/FlipGameContract.ts
-export const ADDRESS = '0xd745017f394fF7C965347aCF68383657ea2959f8';
+export const ADDRESS = '0xA552961Da3C903038473FA7531edF2286D6f832D';
 
 // Supported tokens - 
 // 0x07F41412697D14981e770b6E335051b1231A2bA8

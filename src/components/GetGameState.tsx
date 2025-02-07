@@ -15,6 +15,18 @@ const GetGameState = () => {
   const [hasWithdrawnState, setHasWithdrawnState] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const getGameStateText = (stateNumber: number) => {
+    const stateMap: Record<number, string> = {
+      0: "Created",
+      1: "In Progress",
+      2: "Resolved",
+      3: "Completed",
+    };
+  
+    return stateMap[stateNumber] || "Unknown";
+  };
+  
+
   useEffect(() => {
     const fetchGameStates = async () => {
       try {
@@ -149,12 +161,12 @@ const GetGameState = () => {
                           {state.tokenAddress}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white/90">
-                          {state.state}
+                    <td className="px-6 py-4">
+                     <span className="text-white/90">
+                      {getGameStateText(state.state)}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
+                    </td>
+                     <td className="px-6 py-4">
                         <span className="text-white/90">
                           {state.winner || 'Not resolved yet'}
                         </span>
