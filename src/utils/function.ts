@@ -28,7 +28,7 @@ export const publicContract = new ethers.Contract(ADDRESS, ABI, publicProvider);
 
 export const publicWsContract = new ethers.Contract(ADDRESS, ABI, publicWsProvider);
 // Function to set up signer and contract for wallet interaction
-async function setupContractWithSigner() {
+export async function setupContractWithSigner() {
   try {
     if (window.ethereum) {
       const provider = new ethers.BrowserProvider(window.ethereum as unknown as ethers.Eip1193Provider);
